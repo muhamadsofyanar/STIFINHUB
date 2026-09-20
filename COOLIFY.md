@@ -7,7 +7,11 @@
 3. Pastikan `Dockerfile`, `server.js`, `seed.js`, `package.json`, dan folder `public` terlihat di GitHub.
 4. Jangan unggah file `.env` atau `data/database.json`.
 
-## 2. Buat aplikasi di Coolify
+## 2. Pilih mode deploy
+
+### Mode A: Dockerfile tanpa Nginx tambahan
+
+Mode ini direkomendasikan. Coolify sudah memiliki reverse proxy dan SSL.
 
 1. Pilih **New Resource**.
 2. Pilih **Public Repository** atau GitHub App jika repository bersifat privat.
@@ -18,26 +22,36 @@
 
 Port internal aplikasi adalah 3000. Tidak perlu mengubahnya menjadi 80. Coolify menerima trafik HTTPS pada domain lalu meneruskannya ke port 3000.
 
+### Mode B: Docker Compose dengan Nginx
+
+Gunakan mode ini hanya jika ingin Nginx berada di dalam stack aplikasi.
+
+1. Pilih **New Resource** lalu **Docker Compose**.
+2. Gunakan repository dan branch `main`.
+3. Isi lokasi compose file dengan `/docker-compose.nginx.yml`.
+4. Pilih service `nginx` sebagai service yang menerima domain.
+5. Gunakan port **80** pada service `nginx`.
+6. Jangan memasang domain pada service `app`.
+
+Compose dapat dimuat sebelum environment diisi. Namun, isi seluruh environment variables sebelum menekan Deploy.
+
+Alurnya menjadi: internet dan HTTPS Coolify, service Nginx port 80, lalu aplikasi Node.js port 3000.
+
 ## 3. Tambahkan environment variables
 
-```text
-NODE_ENV=production
-PORT=3000
-APP_NAME=STIFIn Mulia Marketing Hub
-APP_URL=https://app.stifinmulia.com
-APP_KEY=hasil-openssl-rand-hex-32
-APP_ADMIN_EMAIL=email-pemilik
-APP_ADMIN_PASSWORD=password-kuat
-COOKIE_SECURE=true
-DATA_FILE=/app/data/database.json
-TZ=Asia/Jakarta
+Salin isi `ENVIRONMENT-COOLIFY.txt` ke menu **Environment Variables**. Ganti nilai `APP_KEY`, `APP_ADMIN_EMAIL`, dan `APP_ADMIN_PASSWORD`.
+
+Untuk membuat `APP_KEY`, jalankan:
+
+```bash
+openssl rand -hex 32
 ```
 
 Jangan mengganti `APP_ADMIN_PASSWORD` setelah basis data pertama dibuat dengan harapan password login ikut berubah. Setelah login pertama, ubah password melalui menu Profil.
 
 ## 4. Pasang persistent storage
 
-Pada menu Storage Coolify:
+Pada Mode A, buka menu Storage Coolify:
 
 - Type: Volume
 - Destination path: `/app/data`
@@ -45,12 +59,16 @@ Pada menu Storage Coolify:
 
 Langkah ini wajib. Tanpa volume, data dapat hilang saat container dibuat ulang.
 
+Pada Mode B, named volume `stifin_mulia_data` sudah didefinisikan di `docker-compose.nginx.yml`. Pastikan volume tersebut muncul setelah deployment.
+
 ## 5. Hubungkan domain
 
 1. Tambahkan domain `https://app.stifinmulia.com` pada aplikasi.
 2. Di pengelola DNS, buat record `A` untuk `app` menuju IP server Coolify. Jika penyedia memberi target CNAME, gunakan CNAME tersebut.
 3. Aktifkan HTTPS melalui Coolify.
 4. Deploy ulang setelah DNS tersambung.
+
+SSL tidak perlu dikonfigurasi di dalam Nginx. Coolify menangani sertifikat HTTPS di reverse proxy terluar.
 
 ## 6. Pemeriksaan setelah deploy
 

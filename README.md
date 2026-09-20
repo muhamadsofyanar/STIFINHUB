@@ -15,6 +15,11 @@ Aplikasi internal untuk mengelola pemasaran dan operasional STIFIn Mulia. Aplika
 - Laporan konversi dan distribusi data
 - Ekspor CSV dan backup JSON
 - Pengguna tim dengan peran pemilik, admin, konten, CRM, dan viewer
+- Sinkronisasi aman daftar promotor API STIFIn cabang `JML-CAB-62`
+- Pemeriksaan saldo voucher promotor satu per satu
+- Pusat pesan StarSender V3 dengan fallback WhatsApp manual
+- Antrean tindak lanjut lead dan review promotor
+- Log pengiriman, webhook tersanitasi, dan laporan integrasi
 
 ## Menjalankan di komputer
 
@@ -60,10 +65,15 @@ Pengujian memeriksa login, 120 bank konten, penyimpanan lead, ekspor CSV, dan ba
 ## Struktur
 
 - `server.js`: server, autentikasi, CRUD, laporan, dan antarmuka
+- `integrations.js`: konektor API STIFIn dan StarSender
 - `seed.js`: 120 materi awal dan 16 skrip WhatsApp
 - `public/`: CSS dan JavaScript antarmuka
 - `data/`: basis data JSON persisten
 - `COOLIFY.md`: panduan deploy lengkap
+- `ENVIRONMENT-COOLIFY.txt`: variabel yang siap ditempel ke Coolify
+- `docker-compose.nginx.yml`: opsi stack dengan Nginx
+- `nginx/default.conf`: konfigurasi reverse proxy Nginx
+- `DEPLOYMENT-CHECKLIST.md`: pemeriksaan sebelum dan sesudah deploy
 
 ## Backup
 
@@ -72,3 +82,15 @@ Pemilik dan administrator dapat membuka menu Laporan lalu memilih **Cadangan len
 ## Catatan penggunaan materi
 
 Materi awal mengacu pada tema WSL 1, WSL 2, parenting, learning, teaching, profesi, bisnis, kepemimpinan, finansial, rezeki, pasangan, prosedur layanan tes, dan jaringan wilayah. Tim tetap perlu meninjau klaim, biaya, jadwal, dan ketentuan resmi sebelum menerbitkan konten.
+
+## Integrasi StarSender
+
+Masukkan API key hanya melalui Environment Variables Coolify. Jangan menaruh kunci di repository. Sampai `STARSENDER_ENABLED=true`, `STARSENDER_SEND_URL`, dan `STARSENDER_API_KEY` lengkap, Pusat Pesan tetap dapat membuka WhatsApp manual. Pengiriman otomatis hanya diizinkan untuk lead dengan kolom **Izin menerima pesan WhatsApp = Ya**.
+
+Webhook dapat diarahkan ke:
+
+```text
+https://app.stifinmulia.com/webhooks/starsender/NILAI_STARSENDER_WEBHOOK_SECRET
+```
+
+Gunakan URL kirim dan format autentikasi resmi yang tampil pada akun StarSender V3 Premium Anda; aplikasi tidak menebak endpoint agar kunci dan pesan tidak terkirim ke alamat yang salah.

@@ -1,0 +1,6 @@
+.details{display:grid;gap:0;margin:0 0 18px}
+.details>div{display:flex;justify-content:space-between;gap:20px;padding:11px 0;border-bottom:1px solid var(--line)}
+.details dt{color:var(--muted)}
+.details dd{margin:0;font-weight:800;text-align:right}
+.section-gap{margin-top:28px!important}
+.alert a{text-decoration:underline;font-weight:800}
