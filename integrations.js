@@ -13,7 +13,7 @@ async function requestJson(url,options={}){
     const raw=await response.text();
     let data={};
     try{data=raw?JSON.parse(raw):{}}catch{throw new Error(`Respons integrasi bukan JSON (HTTP ${response.status}).`)}
-    if(!response.ok)throw new Error(`Integrasi gagal (HTTP ${response.status}).`);
+    if(!response.ok){const detail=String(data?.message??data?.error??'').replace(/[\r\n]+/g,' ').slice(0,160);throw new Error(`Integrasi gagal (HTTP ${response.status})${detail?`: ${detail}`:'.'}`)}
     return data;
   }finally{timeout.done()}
 }
@@ -63,7 +63,7 @@ export async function fetchVoucherBalance(promoterCode){
 }
 
 export function starSenderConfig(){
-  return {enabled:String(process.env.STARSENDER_ENABLED||'false').toLowerCase()==='true',sendUrl:String(process.env.STARSENDER_SEND_URL||'').trim(),deviceKey:String(process.env.STARSENDER_DEVICE_KEY||'').trim(),hasApiKey:Boolean(process.env.STARSENDER_API_KEY)};
+  return {enabled:String(process.env.STARSENDER_ENABLED||'false').toLowerCase()==='true',sendUrl:String(process.env.STARSENDER_SEND_URL||'https://api.starsender.online/api/send').trim(),hasApiKey:Boolean(process.env.STARSENDER_API_KEY)};
 }
 
 export async function sendStarSender({phone,message}){
@@ -71,10 +71,9 @@ export async function sendStarSender({phone,message}){
   if(!config.enabled)throw new Error('StarSender belum diaktifkan.');
   if(!config.sendUrl||!process.env.STARSENDER_API_KEY)throw new Error('URL kirim atau API key StarSender belum lengkap.');
   const header=String(process.env.STARSENDER_AUTH_HEADER||'Authorization');
-  const scheme=String(process.env.STARSENDER_AUTH_SCHEME??'Bearer').trim();
+  const scheme=String(process.env.STARSENDER_AUTH_SCHEME??'').trim();
   const headers={'content-type':'application/json',[header]:`${scheme?`${scheme} `:''}${process.env.STARSENDER_API_KEY}`};
-  const payload={to:cleanPhone(phone).replace(/^0/,'62'),message};
-  if(config.deviceKey)payload.device_key=config.deviceKey;
+  const payload={messageType:'text',to:cleanPhone(phone).replace(/^0/,'62'),body:message};
   const result=await requestJson(config.sendUrl,{method:'POST',headers,body:JSON.stringify(payload)});
   return {externalId:String(result?.id??result?.data?.id??result?.message_id??''),result};
 }

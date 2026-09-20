@@ -85,7 +85,7 @@ Materi awal mengacu pada tema WSL 1, WSL 2, parenting, learning, teaching, profe
 
 ## Integrasi StarSender
 
-Masukkan API key hanya melalui Environment Variables Coolify. Jangan menaruh kunci di repository. Sampai `STARSENDER_ENABLED=true`, `STARSENDER_SEND_URL`, dan `STARSENDER_API_KEY` lengkap, Pusat Pesan tetap dapat membuka WhatsApp manual. Pengiriman otomatis hanya diizinkan untuk lead dengan kolom **Izin menerima pesan WhatsApp = Ya**.
+Masukkan API key hanya melalui Environment Variables Coolify. Jangan menaruh kunci di repository. Gunakan **Device API Key** dari menu Device StarSender sebagai `STARSENDER_API_KEY`. Endpoint resmi pengiriman adalah `https://api.starsender.online/api/send`, sedangkan `STARSENDER_AUTH_SCHEME` harus kosong karena kunci dikirim langsung pada header `Authorization`. Sampai `STARSENDER_ENABLED=true`, URL kirim, dan API key lengkap, Pusat Pesan tetap dapat membuka WhatsApp manual. Pengiriman otomatis hanya diizinkan untuk lead dengan kolom **Izin menerima pesan WhatsApp = Ya**.
 
 Webhook dapat diarahkan ke:
 
