@@ -1,0 +1,13 @@
+{
+  "name": "stifin-mulia-marketing-hub",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Dashboard internal pemasaran dan operasional STIFIn Mulia",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "NODE_ENV=development COOKIE_SECURE=false node --watch server.js",
+    "test": "node tests/smoke.mjs"
+  },
+  "engines": { "node": ">=20" }
+}
