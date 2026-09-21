@@ -1,6 +1,6 @@
 # Environment Coolify
 
-Dokumen ini berisi variabel environment untuk **STIFIn Mulia Growth OS v1.6.0**.
+Dokumen ini berisi variabel environment untuk **STIFIn Mulia Growth OS v1.6.1**.
 
 ## 1. Konfigurasi aplikasi
 
