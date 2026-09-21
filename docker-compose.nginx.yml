@@ -16,6 +16,7 @@ services:
       COOKIE_SECURE: "true"
       DATA_FILE: "/app/data/database.json"
       BACKUP_DIR: "/app/data/backups"
+      MEDIA_DIR: "/app/data/media"
       BACKUP_INTERVAL_MINUTES: "${BACKUP_INTERVAL_MINUTES:-360}"
       BACKUP_RETENTION: "${BACKUP_RETENTION:-30}"
       TZ: "Asia/Jakarta"
@@ -30,6 +31,7 @@ services:
       STARSENDER_AUTH_HEADER: "${STARSENDER_AUTH_HEADER:-Authorization}"
       STARSENDER_AUTH_SCHEME: "${STARSENDER_AUTH_SCHEME:-}"
       STARSENDER_WEBHOOK_SECRET: "${STARSENDER_WEBHOOK_SECRET:-}"
+      BROADCAST_DELAY_MS: "${BROADCAST_DELAY_MS:-500}"
     volumes:
       - stifin_mulia_data:/app/data
     expose:

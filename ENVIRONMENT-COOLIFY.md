@@ -1,6 +1,6 @@
 # Environment Coolify
 
-Dokumen ini berisi variabel environment untuk **STIFIn Mulia Growth OS v1.5.0**.
+Dokumen ini berisi variabel environment untuk **STIFIn Mulia Growth OS v1.6.0**.
 
 ## 1. Konfigurasi aplikasi
 
@@ -18,6 +18,7 @@ APP_ADMIN_PASSWORD=WAJIB_GANTI_DENGAN_PASSWORD_KUAT
 COOKIE_SECURE=true
 DATA_FILE=/app/data/database.json
 BACKUP_DIR=/app/data/backups
+MEDIA_DIR=/app/data/media
 BACKUP_INTERVAL_MINUTES=360
 BACKUP_RETENTION=30
 TZ=Asia/Jakarta
@@ -61,6 +62,7 @@ STARSENDER_API_KEY=WAJIB_ISI_DEVICE_API_KEY_DARI_MENU_DEVICE
 STARSENDER_AUTH_HEADER=Authorization
 STARSENDER_AUTH_SCHEME=
 STARSENDER_WEBHOOK_SECRET=WAJIB_GANTI_DENGAN_TOKEN_ACAK
+BROADCAST_DELAY_MS=500
 ```
 
 Buat token webhook menggunakan:
@@ -90,6 +92,8 @@ STARSENDER_ENABLED=true
 ```
 
 Lakukan **Redeploy** setelah mengubah environment. Setelah masuk ke menu **Communication Center**, tekan **Sinkronkan Grup** untuk memuat grup perangkat WhatsApp. Pesan pribadi baru dan pesan grup baru mulai tersimpan setelah webhook Premium atau Group diarahkan ke aplikasi. Riwayat WhatsApp lama tidak dapat diambil otomatis. Pengiriman otomatis pribadi hanya berlaku untuk lead yang memiliki status **Izin menerima pesan WhatsApp = Ya**. Jika integrasi belum aktif, operator tetap dapat memakai tombol **Buka WhatsApp**.
+
+Menu **Kirim Massal** dapat menggabungkan grup dan kontak pribadi dalam satu preset. Gambar yang diunggah disimpan di `/app/data/media`, lalu dikirim sebagai URL publik melalui `APP_URL`. Pastikan `APP_URL` memakai domain HTTPS aktif. `BROADCAST_DELAY_MS=500` memberi jeda 500 milidetik antarpenerima. Satu proses dibatasi maksimal 50 penerima.
 
 ## Pengaturan port Coolify
 

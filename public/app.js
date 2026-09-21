@@ -6,6 +6,21 @@ document.querySelectorAll('[data-message-template]').forEach(select=>select.addE
   const textarea=select.closest('form')?.querySelector('textarea[name="message"]'),message=select.selectedOptions[0]?.dataset.message||'';
   if(textarea&&message)textarea.value=message;
 }));
+document.querySelectorAll('[data-image-file]').forEach(input=>input.addEventListener('change',()=>{
+  const form=input.closest('form'),hidden=form?.querySelector('[data-image-data]'),status=form?.querySelector('[data-image-status]'),preview=form?.querySelector('[data-image-preview]'),file=input.files?.[0];
+  if(hidden)hidden.value='';if(preview){preview.hidden=true;preview.removeAttribute('src')}
+  if(!file){if(status)status.textContent='Maksimal 4 MB.';return}
+  if(!['image/jpeg','image/png','image/webp'].includes(file.type)){if(status)status.textContent='Gunakan JPG, PNG, atau WebP.';input.value='';return}
+  if(file.size>4_000_000){if(status)status.textContent='Gambar terlalu besar. Maksimal 4 MB.';input.value='';return}
+  const reader=new FileReader();reader.onload=()=>{if(hidden)hidden.value=String(reader.result||'');if(status)status.textContent=`${file.name} siap dikirim.`;if(preview){preview.src=String(reader.result||'');preview.hidden=false}};reader.onerror=()=>{if(status)status.textContent='Gambar gagal dibaca.'};reader.readAsDataURL(file);
+}));
+document.querySelectorAll('[data-check-type]').forEach(button=>button.addEventListener('click',()=>{
+  const boxes=[...document.querySelectorAll(`[data-recipient-type="${button.dataset.checkType}"]`)],check=!boxes.every(x=>x.checked);boxes.forEach(x=>x.checked=check);button.textContent=check?'Batalkan semua':'Pilih semua';
+}));
+document.querySelector('[data-broadcast-form]')?.addEventListener('submit',e=>{
+  if(!e.submitter?.matches('[data-broadcast-send]'))return;const total=document.querySelectorAll('[data-broadcast-form] input[name="recipientKeys"]:checked').length;
+  if(!confirm(`Kirim pesan ke ${total} penerima sekarang?`))e.preventDefault();
+});
 document.querySelectorAll('[data-restore-form]').forEach(form=>{
   const file=form.querySelector('[data-backup-file]'),data=form.querySelector('[data-backup-data]'),button=form.querySelector('[data-restore-button]'),status=form.querySelector('[data-restore-status]');
   file?.addEventListener('change',async()=>{

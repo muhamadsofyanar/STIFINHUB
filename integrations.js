@@ -67,14 +67,15 @@ export function starSenderConfig(){
   return {enabled:String(process.env.STARSENDER_ENABLED||'false').toLowerCase()==='true',sendUrl:String(process.env.STARSENDER_SEND_URL||'https://api.starsender.online/api/send').trim(),hasApiKey:Boolean(process.env.STARSENDER_API_KEY)};
 }
 
-export async function sendStarSender({phone,message}){
+export async function sendStarSender({phone,message,file=''}){
   const config=starSenderConfig();
   if(!config.enabled)throw new Error('StarSender belum diaktifkan.');
   if(!config.sendUrl||!process.env.STARSENDER_API_KEY)throw new Error('URL kirim atau API key StarSender belum lengkap.');
   const header=String(process.env.STARSENDER_AUTH_HEADER||'Authorization');
   const scheme=String(process.env.STARSENDER_AUTH_SCHEME??'').trim();
   const headers={'content-type':'application/json',[header]:`${scheme?`${scheme} `:''}${process.env.STARSENDER_API_KEY}`};
-  const payload={messageType:'text',to:cleanPhone(phone).replace(/^0/,'62'),body:message};
+  const payload={messageType:file?'media':'text',to:cleanPhone(phone).replace(/^0/,'62'),body:String(message||'')};
+  if(file)payload.file=String(file);
   const result=await requestJson(config.sendUrl,{method:'POST',headers,body:JSON.stringify(payload)});
   return {externalId:String(result?.id??result?.data?.id??result?.message_id??''),result};
 }
@@ -100,11 +101,12 @@ export async function fetchWhatsAppGroups(){
   })).filter(row=>row.groupId||row.name);
 }
 
-export async function sendStarSenderGroup({group,message}){
+export async function sendStarSenderGroup({group,message,file=''}){
   const config=starSenderConfig();
   if(!config.enabled)throw new Error('StarSender belum diaktifkan.');
   const url=String(process.env.STARSENDER_GROUP_SEND_URL||'https://api.starsender.online/api/send/grup').trim();
-  const payload={messageType:'text',to:String(group||'').trim(),body:String(message||'').trim()};
+  const payload={messageType:file?'media':'text',to:String(group||'').trim(),body:String(message||'').trim()};
+  if(file)payload.file=String(file);
   const result=await requestJson(url,{method:'POST',headers:starSenderHeaders(),body:JSON.stringify(payload)});
   return {externalId:String(result?.id??result?.data?.id??result?.message_id??''),result};
 }

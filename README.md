@@ -23,6 +23,9 @@ Aplikasi internal untuk mengelola pemasaran dan operasional STIFIn Mulia. Aplika
 - Growth CRM berbentuk Kanban dengan lead scoring dan rekomendasi tindakan
 - Communication Center untuk percakapan pribadi dan grup dari webhook StarSender
 - Sinkronisasi daftar grup, balasan grup, status belum dibaca, label CRM, dan catatan internal
+- Pengiriman massal ke campuran grup dan kontak pribadi
+- Preset penerima yang dapat disimpan dan digunakan ulang
+- Pengiriman gambar JPG, PNG, atau WebP dengan caption
 - Kampanye dengan tautan pelacakan, sumber lead, dan konversi booking
 - Formulir konsultasi publik dengan persetujuan WhatsApp dan perlindungan spam
 - Copywriting Lab yang mengubah satu materi menjadi enam format konten
@@ -105,6 +108,12 @@ https://app.stifinmulia.com/webhooks/starsender/NILAI_STARSENDER_WEBHOOK_SECRET
 ```
 
 Aktifkan webhook Premium atau Group agar pesan baru masuk ke Communication Center. Aplikasi menyimpan percakapan mulai sejak webhook aktif, bukan mengambil seluruh riwayat lama dari WhatsApp. Daftar grup dapat dimuat lewat tombol **Sinkronkan Grup**.
+
+## Kirim massal dan gambar
+
+Menu **Kirim Massal** menampilkan grup yang telah disinkronkan dan lead pribadi yang memiliki izin WhatsApp `Ya`. Pilihan keduanya dapat disimpan sebagai preset. Setiap pengiriman dibatasi maksimal 50 penerima dan diberi jeda antarpenerima melalui `BROADCAST_DELAY_MS`.
+
+Gambar lokal divalidasi sebagai JPG, PNG, atau WebP dengan ukuran maksimal 4 MB. File disimpan di `/app/data/media`, sehingga persistent storage `/app/data` juga melindungi riwayat gambar saat redeploy. StarSender mengambil gambar melalui URL publik berdasarkan `APP_URL`.
 
 ## Growth CRM dan kampanye
 

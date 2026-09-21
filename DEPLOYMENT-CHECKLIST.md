@@ -40,6 +40,9 @@
 - [ ] Pesan pribadi masuk tampil di Communication Center
 - [ ] Tombol Sinkronkan Grup memuat daftar grup WhatsApp
 - [ ] Pesan grup masuk dan balasan grup tampil di percakapan yang sama
+- [ ] Preset campuran grup dan kontak pribadi dapat disimpan serta dimuat kembali
+- [ ] Gambar maksimal 4 MB dapat dikirim ke grup dan kontak pribadi
+- [ ] URL gambar pada `/media/` dapat dibuka tanpa login
 - [ ] Copywriting Lab menghasilkan enam format
 - [ ] Akun tim dibuat sesuai peran
 - [ ] Lead uji sudah dihapus
