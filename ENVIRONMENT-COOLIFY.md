@@ -62,6 +62,7 @@ STARSENDER_API_KEY=WAJIB_ISI_DEVICE_API_KEY_DARI_MENU_DEVICE
 STARSENDER_AUTH_HEADER=Authorization
 STARSENDER_AUTH_SCHEME=
 STARSENDER_WEBHOOK_SECRET=WAJIB_GANTI_DENGAN_TOKEN_ACAK
+STARSENDER_WEB_WHATSAPP_URL=https://app.starsender.online/web-whatsapp/69194
 BROADCAST_DELAY_MS=500
 ```
 
@@ -92,6 +93,8 @@ STARSENDER_ENABLED=true
 ```
 
 Lakukan **Redeploy** setelah mengubah environment. Setelah masuk ke menu **Communication Center**, tekan **Sinkronkan Grup** untuk memuat grup perangkat WhatsApp. Pesan pribadi baru dan pesan grup baru mulai tersimpan setelah webhook Premium atau Group diarahkan ke aplikasi. Riwayat WhatsApp lama tidak dapat diambil otomatis. Pengiriman otomatis pribadi hanya berlaku untuk lead yang memiliki status **Izin menerima pesan WhatsApp = Ya**. Jika integrasi belum aktif, operator tetap dapat memakai tombol **Buka WhatsApp**.
+
+Menu **WhatsApp Live** tersedia untuk pemilik dan admin. Menu tersebut membuka Web WhatsApp milik StarSender di tab baru dengan sesi login StarSender yang aktif. Jika ID perangkat berubah, cukup perbarui `STARSENDER_WEB_WHATSAPP_URL` lalu lakukan Redeploy.
 
 Menu **Kirim Massal** dapat menggabungkan grup dan kontak pribadi dalam satu preset. Gambar yang diunggah disimpan di `/app/data/media`, lalu dikirim sebagai URL publik melalui `APP_URL`. Pastikan `APP_URL` memakai domain HTTPS aktif. `BROADCAST_DELAY_MS=500` memberi jeda 500 milidetik antarpenerima. Satu proses dibatasi maksimal 50 penerima.
 

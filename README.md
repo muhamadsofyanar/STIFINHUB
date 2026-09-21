@@ -26,6 +26,7 @@ Aplikasi internal untuk mengelola pemasaran dan operasional STIFIn Mulia. Aplika
 - Pengiriman massal ke campuran grup dan kontak pribadi
 - Preset penerima yang dapat disimpan dan digunakan ulang
 - Pengiriman gambar JPG, PNG, atau WebP dengan caption
+- Akses WhatsApp Live StarSender khusus pemilik dan admin
 - Kampanye dengan tautan pelacakan, sumber lead, dan konversi booking
 - Formulir konsultasi publik dengan persetujuan WhatsApp dan perlindungan spam
 - Copywriting Lab yang mengubah satu materi menjadi enam format konten
@@ -108,6 +109,8 @@ https://app.stifinmulia.com/webhooks/starsender/NILAI_STARSENDER_WEBHOOK_SECRET
 ```
 
 Aktifkan webhook Premium atau Group agar pesan baru masuk ke Communication Center. Aplikasi menyimpan percakapan mulai sejak webhook aktif, bukan mengambil seluruh riwayat lama dari WhatsApp. Daftar grup dapat dimuat lewat tombol **Sinkronkan Grup**.
+
+Menu **WhatsApp Live** membuka antarmuka Web WhatsApp StarSender di tab baru. Atur alamat perangkat melalui `STARSENDER_WEB_WHATSAPP_URL`. Aplikasi hanya menerima URL HTTPS pada domain `app.starsender.online` dengan jalur `/web-whatsapp/`. Akses menu dibatasi untuk pemilik dan admin.
 
 ## Kirim massal dan gambar
 

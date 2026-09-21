@@ -10,6 +10,7 @@
 - [ ] `BUSINESS_WHATSAPP` berisi `081333362649`
 - [ ] Device API Key StarSender diisi tanpa awalan `Bearer`
 - [ ] `STARSENDER_AUTH_SCHEME` dibiarkan kosong
+- [ ] `STARSENDER_WEB_WHATSAPP_URL` mengarah ke perangkat StarSender yang benar
 - [ ] DNS `app.stifinmulia.com` mengarah ke server Coolify
 
 ## Konfigurasi Coolify
@@ -40,6 +41,7 @@
 - [ ] Pesan pribadi masuk tampil di Communication Center
 - [ ] Tombol Sinkronkan Grup memuat daftar grup WhatsApp
 - [ ] Pesan grup masuk dan balasan grup tampil di percakapan yang sama
+- [ ] Menu WhatsApp Live membuka Web WhatsApp StarSender di tab baru
 - [ ] Preset campuran grup dan kontak pribadi dapat disimpan serta dimuat kembali
 - [ ] Gambar maksimal 4 MB dapat dikirim ke grup dan kontak pribadi
 - [ ] URL gambar pada `/media/` dapat dibuka tanpa login
