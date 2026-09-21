@@ -82,8 +82,11 @@ export function sanitizeStarSenderWebhook(payload){
   const source=payload&&typeof payload==='object'?payload:{};
   return {
     externalId:String(source.id??source.message_id??source.data?.id??'').slice(0,160),
-    phone:cleanPhone(source.phone??source.to??source.number??source.data?.phone??'').slice(0,30),
+    phone:cleanPhone(source.from??source.phone??source.to??source.number??source.data?.phone??'').slice(0,30),
+    message:String(source.message??source.body??source.text??source.data?.message??'').slice(0,4000),
+    device:String(source.device??source.data?.device??'').slice(0,160),
     event:String(source.event??source.status??source.type??source.data?.status??'unknown').slice(0,80),
+    sourceTimestamp:String(source.timestamp??source.data?.timestamp??'').slice(0,80),
     receivedAt:new Date().toISOString()
   };
 }

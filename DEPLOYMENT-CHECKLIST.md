@@ -7,6 +7,9 @@
 - [ ] `APP_KEY` sudah dibuat dengan `openssl rand -hex 32`
 - [ ] Email pemilik sudah ditentukan
 - [ ] Password awal minimal 10 karakter dan tidak dipakai di layanan lain
+- [ ] `BUSINESS_WHATSAPP` berisi `081333362649`
+- [ ] Device API Key StarSender diisi tanpa awalan `Bearer`
+- [ ] `STARSENDER_AUTH_SCHEME` dibiarkan kosong
 - [ ] DNS `app.stifinmulia.com` mengarah ke server Coolify
 
 ## Konfigurasi Coolify
@@ -27,5 +30,10 @@
 - [ ] Satu lead uji berhasil disimpan
 - [ ] Redeploy tidak menghapus lead uji
 - [ ] Backup JSON berhasil diunduh
+- [ ] Growth CRM dapat dibuka
+- [ ] Form `/forms/consultation` berhasil membuat lead
+- [ ] Tautan kampanye mencatat klik
+- [ ] Pesan masuk webhook tampil di Inbox WhatsApp
+- [ ] Copywriting Lab menghasilkan enam format
 - [ ] Akun tim dibuat sesuai peran
 - [ ] Lead uji sudah dihapus

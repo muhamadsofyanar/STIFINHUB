@@ -4,7 +4,7 @@
 
 1. Buat repository baru, misalnya `stifin-mulia-marketing-hub`.
 2. Unggah seluruh isi folder proyek ini ke root repository.
-3. Pastikan `Dockerfile`, `server.js`, `seed.js`, `package.json`, dan folder `public` terlihat di GitHub.
+3. Pastikan `Dockerfile`, `server.js`, `integrations.js`, `seed.js`, `package.json`, dan folder `public` terlihat di GitHub.
 4. Jangan unggah file `.env` atau `data/database.json`.
 
 ## 2. Pilih mode deploy
@@ -39,7 +39,7 @@ Alurnya menjadi: internet dan HTTPS Coolify, service Nginx port 80, lalu aplikas
 
 ## 3. Tambahkan environment variables
 
-Salin isi `ENVIRONMENT-COOLIFY.txt` ke menu **Environment Variables**. Ganti nilai `APP_KEY`, `APP_ADMIN_EMAIL`, dan `APP_ADMIN_PASSWORD`.
+Salin isi `ENVIRONMENT-COOLIFY.txt` ke menu **Environment Variables**. Ganti nilai `APP_KEY`, `APP_ADMIN_EMAIL`, `APP_ADMIN_PASSWORD`, Device API Key StarSender, serta webhook secret. Pastikan `BUSINESS_WHATSAPP=081333362649`.
 
 Untuk membuat `APP_KEY`, jalankan:
 
@@ -79,6 +79,9 @@ SSL tidak perlu dikonfigurasi di dalam Nginx. Coolify menangani sertifikat HTTPS
 - Redeploy aplikasi.
 - Pastikan data uji tetap ada. Ini membuktikan volume sudah benar.
 - Hapus data uji jika sudah selesai.
+- Buka `/forms/consultation` dan kirim satu lead uji.
+- Buat satu kampanye lalu uji tautan `/go/KODE-KAMPANYE`.
+- Pastikan webhook StarSender menampilkan pesan masuk pada Inbox WhatsApp.
 
 ## 7. Pembaruan berikutnya
 

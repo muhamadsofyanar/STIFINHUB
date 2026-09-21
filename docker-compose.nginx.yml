@@ -9,6 +9,7 @@ services:
       PORT: "3000"
       APP_NAME: "${APP_NAME:-STIFIn Mulia Marketing Hub}"
       APP_URL: "${APP_URL:-https://app.stifinmulia.com}"
+      BUSINESS_WHATSAPP: "${BUSINESS_WHATSAPP:-081333362649}"
       APP_KEY: "${APP_KEY:-}"
       APP_ADMIN_EMAIL: "${APP_ADMIN_EMAIL:-admin@stifinmulia.com}"
       APP_ADMIN_PASSWORD: "${APP_ADMIN_PASSWORD:-}"

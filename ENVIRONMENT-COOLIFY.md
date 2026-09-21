@@ -1,6 +1,6 @@
 # Environment Coolify
 
-Dokumen ini berisi variabel environment untuk **STIFIn Mulia Marketing Hub v1.2.1**.
+Dokumen ini berisi variabel environment untuk **STIFIn Mulia Growth OS v1.3.0**.
 
 ## 1. Konfigurasi aplikasi
 
@@ -11,6 +11,7 @@ NODE_ENV=production
 PORT=3000
 APP_NAME=STIFIn Mulia Marketing Hub
 APP_URL=https://app.stifinmulia.com
+BUSINESS_WHATSAPP=081333362649
 APP_KEY=WAJIB_GANTI_DENGAN_KUNCI_ACAK
 APP_ADMIN_EMAIL=WAJIB_GANTI_DENGAN_EMAIL_PEMILIK
 APP_ADMIN_PASSWORD=WAJIB_GANTI_DENGAN_PASSWORD_KUAT
@@ -90,3 +91,4 @@ Lakukan **Redeploy** setelah mengubah environment. Pengiriman otomatis hanya ber
 - Jika memakai `docker-compose.nginx.yml`, gunakan internal port `80`.
 - Jika menjalankan aplikasi langsung dari `Dockerfile`, gunakan internal port `3000`.
 - Domain utama dashboard: `https://app.stifinmulia.com`.
+- Formulir konsultasi publik: `https://app.stifinmulia.com/forms/consultation`.

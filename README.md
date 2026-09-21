@@ -1,4 +1,4 @@
-# STIFIn Mulia Marketing Hub
+# STIFIn Mulia Growth OS
 
 Aplikasi internal untuk mengelola pemasaran dan operasional STIFIn Mulia. Aplikasi ini dipasang terpisah dari website publik pada `app.stifinmulia.com`.
 
@@ -20,6 +20,11 @@ Aplikasi internal untuk mengelola pemasaran dan operasional STIFIn Mulia. Aplika
 - Pusat pesan StarSender V3 dengan fallback WhatsApp manual
 - Antrean tindak lanjut lead dan review promotor
 - Log pengiriman, webhook tersanitasi, dan laporan integrasi
+- Growth CRM berbentuk Kanban dengan lead scoring dan rekomendasi tindakan
+- Inbox WhatsApp dua arah dari webhook StarSender
+- Kampanye dengan tautan pelacakan, sumber lead, dan konversi booking
+- Formulir konsultasi publik dengan persetujuan WhatsApp dan perlindungan spam
+- Copywriting Lab yang mengubah satu materi menjadi enam format konten
 
 ## Menjalankan di komputer
 
@@ -94,3 +99,19 @@ https://app.stifinmulia.com/webhooks/starsender/NILAI_STARSENDER_WEBHOOK_SECRET
 ```
 
 Gunakan URL kirim dan format autentikasi resmi yang tampil pada akun StarSender V3 Premium Anda; aplikasi tidak menebak endpoint agar kunci dan pesan tidak terkirim ke alamat yang salah.
+
+## Growth CRM dan kampanye
+
+Menu **Growth CRM** menampilkan lead dalam pipeline Kanban. Skor lead dihitung dari kelengkapan kebutuhan, izin WhatsApp, rencana layanan, kesiapan biaya, dan tahap CRM. Skor membantu menentukan prioritas, tetapi keputusan akhir tetap dilakukan oleh tim.
+
+Setiap kampanye memiliki tautan publik:
+
+```text
+https://app.stifinmulia.com/go/KODE-KAMPANYE
+```
+
+Klik dicatat tanpa menyimpan alamat IP mentah. Jika URL tujuan tidak diisi, pengunjung diarahkan ke formulir konsultasi publik. Nomor layanan formulir dibaca dari `BUSINESS_WHATSAPP`.
+
+## Copywriting Lab
+
+Copywriting Lab menggunakan data yang sudah ada di Bank Konten. Satu materi dapat diturunkan menjadi headline, caption panjang, pesan WhatsApp, carousel tujuh slide, skrip Reels, dan outline artikel SEO. Tim tetap harus meninjau klaim, konteks, biaya, jadwal, serta ketentuan resmi sebelum publikasi.
