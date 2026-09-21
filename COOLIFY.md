@@ -9,20 +9,29 @@
 
 ## 2. Pilih mode deploy
 
-### Mode A: Dockerfile tanpa Nginx tambahan
+### Mode A: Docker Compose tanpa Nginx tambahan
 
-Mode ini direkomendasikan. Coolify sudah memiliki reverse proxy dan SSL.
+Mode ini direkomendasikan. Konfigurasi memakai volume bernama tetap sehingga data tidak mengikuti siklus hidup container.
 
-1. Pilih **New Resource**.
-2. Pilih **Public Repository** atau GitHub App jika repository bersifat privat.
-3. Masukkan URL repository.
-4. Pilih branch `main`.
-5. Pilih build pack **Dockerfile**.
-6. Isi port aplikasi dengan **3000**.
+1. Pilih **New Resource** lalu **Docker Compose**.
+2. Pilih repository dan branch `main`.
+3. Isi compose file dengan `/docker-compose.coolify.yml`.
+4. Pilih service `app`.
+5. Pasang domain pada service `app` dengan internal port **3000**.
 
 Port internal aplikasi adalah 3000. Tidak perlu mengubahnya menjadi 80. Coolify menerima trafik HTTPS pada domain lalu meneruskannya ke port 3000.
 
-### Mode B: Docker Compose dengan Nginx
+### Mode B: Dockerfile langsung
+
+Gunakan build pack Dockerfile dan internal port `3000`. Setelah resource terbentuk, buat Persistent Storage di Coolify:
+
+- Type: Volume
+- Name: `stifin-mulia-growth-os-data`
+- Destination path: `/app/data`
+
+Langkah storage wajib dilakukan sebelum memasukkan data produksi.
+
+### Mode C: Docker Compose dengan Nginx
 
 Gunakan mode ini hanya jika ingin Nginx berada di dalam stack aplikasi.
 
@@ -51,15 +60,15 @@ Jangan mengganti `APP_ADMIN_PASSWORD` setelah basis data pertama dibuat dengan h
 
 ## 4. Pasang persistent storage
 
-Pada Mode A, buka menu Storage Coolify:
+Pada Mode B, buka menu Storage Coolify:
 
 - Type: Volume
 - Destination path: `/app/data`
-- Name: `stifin-mulia-data`
+- Name: `stifin-mulia-growth-os-data`
 
 Langkah ini wajib. Tanpa volume, data dapat hilang saat container dibuat ulang.
 
-Pada Mode B, named volume `stifin_mulia_data` sudah didefinisikan di `docker-compose.nginx.yml`. Pastikan volume tersebut muncul setelah deployment.
+Pada Mode A dan Mode C, volume `stifin-mulia-growth-os-data` sudah didefinisikan di file Compose. Pastikan volume tersebut muncul setelah deployment.
 
 ## 5. Hubungkan domain
 

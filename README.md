@@ -25,6 +25,9 @@ Aplikasi internal untuk mengelola pemasaran dan operasional STIFIn Mulia. Aplika
 - Kampanye dengan tautan pelacakan, sumber lead, dan konversi booking
 - Formulir konsultasi publik dengan persetujuan WhatsApp dan perlindungan spam
 - Copywriting Lab yang mengubah satu materi menjadi enam format konten
+- Persistent storage dengan identitas instalasi dan pemeriksaan tulis
+- Cadangan lokal bergulir serta pemulihan otomatis saat database rusak
+- Pemulihan cadangan JSON dari dashboard dengan validasi dan cadangan pengaman
 
 ## Menjalankan di komputer
 
@@ -57,7 +60,7 @@ Gunakan perintah berikut untuk membuat `APP_KEY`:
 openssl rand -hex 32
 ```
 
-Data aplikasi tersimpan dalam `data/database.json`. File tersebut tidak masuk Git. Pada Coolify, pasang persistent storage ke `/app/data`.
+Data aplikasi tersimpan dalam `data/database.json`. File tersebut tidak masuk Git. Pada Coolify, pasang persistent storage ke `/app/data`. Gunakan `docker-compose.coolify.yml` agar aplikasi selalu memakai volume tetap `stifin-mulia-growth-os-data`.
 
 ## Pengujian
 
@@ -65,7 +68,7 @@ Data aplikasi tersimpan dalam `data/database.json`. File tersebut tidak masuk Gi
 npm test
 ```
 
-Pengujian memeriksa login, 120 bank konten, penyimpanan lead, ekspor CSV, dan backup.
+Pengujian memeriksa login, 120 bank konten, penyimpanan lead, restart aplikasi, pemulihan database rusak, ekspor CSV, dan backup.
 
 ## Struktur
 
@@ -77,12 +80,14 @@ Pengujian memeriksa login, 120 bank konten, penyimpanan lead, ekspor CSV, dan ba
 - `COOLIFY.md`: panduan deploy lengkap
 - `ENVIRONMENT-COOLIFY.txt`: variabel yang siap ditempel ke Coolify
 - `docker-compose.nginx.yml`: opsi stack dengan Nginx
+- `docker-compose.coolify.yml`: konfigurasi produksi yang direkomendasikan untuk Coolify
+- `DATA-RECOVERY.md`: panduan perlindungan dan pencarian data lama
 - `nginx/default.conf`: konfigurasi reverse proxy Nginx
 - `DEPLOYMENT-CHECKLIST.md`: pemeriksaan sebelum dan sesudah deploy
 
 ## Backup
 
-Pemilik dan administrator dapat membuka menu Laporan lalu memilih **Cadangan lengkap**. Simpan file backup secara berkala di tempat terpisah.
+Pemilik dan administrator dapat membuka menu Integrasi untuk melihat status penyimpanan, membuat cadangan lokal, mengunduh cadangan lengkap, atau memulihkan file cadangan JSON. Sebelum pemulihan, aplikasi otomatis membuat salinan database aktif. Aplikasi juga menyimpan maksimal 30 cadangan bergulir di `/app/data/backups`. Simpan salinan unduhan di tempat terpisah.
 
 ## Catatan penggunaan materi
 

@@ -4,3 +4,11 @@
 .details dd{margin:0;font-weight:800;text-align:right}
 .section-gap{margin-top:28px!important}
 .alert a{text-decoration:underline;font-weight:800}
+.storage-panel{border-top:3px solid var(--g)}
+.storage-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0}
+.storage-grid>div{padding:14px;border:1px solid var(--line);border-radius:10px;background:#f7faf9}
+.storage-grid span,.storage-grid strong{display:block}.storage-grid span{font-size:12px;color:var(--muted);margin-bottom:6px}.storage-grid strong{font-size:17px}
+.storage-panel code{padding:2px 6px;border-radius:5px;background:#eef4f1;color:var(--g)}
+.restore-box{margin-top:18px;border-top:1px solid var(--line);padding-top:15px}.restore-box summary{cursor:pointer;font-weight:800;color:var(--red)}.restore-box form{display:grid;gap:12px;max-width:680px;margin-top:12px}.restore-box small{color:var(--muted)}.btn.danger{background:var(--red);border-color:var(--red);color:#fff}.btn:disabled{opacity:.45;cursor:not-allowed}
+.button-row form{display:inline-flex;margin:0}
+@media(max-width:800px){.storage-grid{grid-template-columns:1fr 1fr}}

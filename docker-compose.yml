@@ -10,3 +10,4 @@ services:
       - stifin_mulia_data:/app/data
 volumes:
   stifin_mulia_data:
+    name: stifin-mulia-growth-os-data

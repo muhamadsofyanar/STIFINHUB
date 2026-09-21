@@ -1,6 +1,6 @@
 # Environment Coolify
 
-Dokumen ini berisi variabel environment untuk **STIFIn Mulia Growth OS v1.3.0**.
+Dokumen ini berisi variabel environment untuk **STIFIn Mulia Growth OS v1.4.0**.
 
 ## 1. Konfigurasi aplikasi
 
@@ -17,6 +17,9 @@ APP_ADMIN_EMAIL=WAJIB_GANTI_DENGAN_EMAIL_PEMILIK
 APP_ADMIN_PASSWORD=WAJIB_GANTI_DENGAN_PASSWORD_KUAT
 COOKIE_SECURE=true
 DATA_FILE=/app/data/database.json
+BACKUP_DIR=/app/data/backups
+BACKUP_INTERVAL_MINUTES=360
+BACKUP_RETENTION=30
 TZ=Asia/Jakarta
 ```
 
@@ -88,7 +91,9 @@ Lakukan **Redeploy** setelah mengubah environment. Pengiriman otomatis hanya ber
 
 ## Pengaturan port Coolify
 
+- Cara yang direkomendasikan: Docker Compose dengan file `/docker-compose.coolify.yml`, service `app`, dan internal port `3000`.
 - Jika memakai `docker-compose.nginx.yml`, gunakan internal port `80`.
 - Jika menjalankan aplikasi langsung dari `Dockerfile`, gunakan internal port `3000`.
+- Pada mode Dockerfile, buat Persistent Storage dengan destination path `/app/data`. Tanpa pengaturan ini, data dapat hilang ketika container diganti.
 - Domain utama dashboard: `https://app.stifinmulia.com`.
 - Formulir konsultasi publik: `https://app.stifinmulia.com/forms/consultation`.

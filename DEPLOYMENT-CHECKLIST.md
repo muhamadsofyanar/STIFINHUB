@@ -18,6 +18,7 @@
 - [ ] Port layanan benar
 - [ ] Semua environment variables sudah diisi
 - [ ] Persistent volume terpasang pada `/app/data`
+- [ ] Volume menggunakan nama tetap `stifin-mulia-growth-os-data`
 - [ ] Domain memakai `https://app.stifinmulia.com`
 - [ ] SSL aktif
 - [ ] Health check berhasil
@@ -29,7 +30,10 @@
 - [ ] Password awal sudah diganti melalui Profil
 - [ ] Satu lead uji berhasil disimpan
 - [ ] Redeploy tidak menghapus lead uji
+- [ ] Menu Integrasi menampilkan penyimpanan dapat ditulis dan ID instalasi tetap sama setelah redeploy
+- [ ] Cadangan manual berhasil dibuat sebelum pembaruan besar
 - [ ] Backup JSON berhasil diunduh
+- [ ] Backup JSON dapat dipilih pada formulir pemulihan tanpa pesan kesalahan
 - [ ] Growth CRM dapat dibuka
 - [ ] Form `/forms/consultation` berhasil membuat lead
 - [ ] Tautan kampanye mencatat klik

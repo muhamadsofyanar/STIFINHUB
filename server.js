@@ -9,9 +9,14 @@ import { fetchBranchPromoters, fetchVoucherBalance, sanitizeStarSenderWebhook, s
 const ROOT=path.dirname(fileURLToPath(import.meta.url));
 const PORT=Number(process.env.PORT||3000);
 const DB_FILE=path.resolve(process.env.DATA_FILE||'./data/database.json');
+const DATA_DIR=path.dirname(DB_FILE);
+const BACKUP_DIR=path.resolve(process.env.BACKUP_DIR||path.join(DATA_DIR,'backups'));
+const BACKUP_INTERVAL_MS=Math.max(5,Number(process.env.BACKUP_INTERVAL_MINUTES||360))*60000;
+const BACKUP_RETENTION=Math.max(3,Number(process.env.BACKUP_RETENTION||30));
 const APP_NAME=process.env.APP_NAME||'STIFIn Mulia Marketing Hub';
 const SECURE=process.env.COOKIE_SECURE!=='false'&&process.env.NODE_ENV!=='development';
 let state;
+let lastBackupAt=0;
 
 const status={
   content:['Belum dibuat','Draft','Sedang didesain','Perlu ditinjau','Siap dijadwalkan','Terjadwal','Dipublikasikan','Perlu diperbarui'],
@@ -44,7 +49,7 @@ http.createServer(async(req,res)=>{
     headers(res);
     const url=new URL(req.url,`http://${req.headers.host||'localhost'}`);
     const pathname=decodeURIComponent(url.pathname).replace(/\/+$/,'')||'/';
-    if(pathname==='/health')return json(res,200,{ok:true});
+    if(pathname==='/health'){const storage=storageHealth();return json(res,storage.ok?200:503,{ok:storage.ok,storage:storage.ok?'writable':'error'});}
     if(pathname==='/robots.txt')return text(res,200,'User-agent: *\nDisallow: /\n','text/plain; charset=utf-8');
     if(pathname.startsWith('/assets/'))return asset(pathname,res);
     if(pathname.startsWith('/webhooks/starsender/'))return starSenderWebhook(req,res,pathname);
@@ -59,7 +64,7 @@ http.createServer(async(req,res)=>{
     if(!auth)return redirect(res,'/login');
     const {user,session}=auth;
     if(req.method==='POST'){
-      req.body=await body(req);
+      req.body=await body(req,pathname==='/restore-backup'?16_000_000:1_500_000);
       if(!safe(req.body.csrf,session.csrf))return html(res,403,layout(user,session,'Akses ditolak','',messageView('Akses ditolak','Sesi formulir tidak valid. Muat ulang halaman.')));
     }
     if(pathname==='/logout'&&req.method==='POST'){res.setHeader('Set-Cookie',clearCookie());return redirect(res,'/login')}
@@ -74,6 +79,8 @@ http.createServer(async(req,res)=>{
     if(balance)return await guard(res,user,session,'integrations',()=>voucherRoute(req,res,user,session,+balance[1]));
     if(pathname==='/profile')return profile(req,res,user,session);
     if(pathname==='/backup.json')return guard(res,user,session,'backup',()=>download(res,DB_FILE,`stifin-mulia-backup-${today()}.json`,'application/json'));
+    if(pathname==='/backup-now'&&req.method==='POST')return guard(res,user,session,'backup',()=>backupNow(req,res,user));
+    if(pathname==='/restore-backup'&&req.method==='POST')return guard(res,user,session,'backup',()=>restoreUploadedBackup(req,res,user));
     const exp=pathname.match(/^\/export\/(content|leads|promoters|referrals|campaigns)\.csv$/);
     if(exp)return guard(res,user,session,'reports',()=>csv(res,exp[1]));
     const route=match(pathname);
@@ -82,9 +89,62 @@ http.createServer(async(req,res)=>{
   }catch(e){console.error(e);if(!res.headersSent)html(res,e.statusCode||500,login(e.statusCode===413?'Data terlalu besar untuk diproses.':'Terjadi kendala pada aplikasi. Silakan coba kembali.'));else res.end()}
 }).listen(PORT,'0.0.0.0',()=>console.log(`${APP_NAME} aktif pada port ${PORT}`));
 
-function initDb(){fs.mkdirSync(path.dirname(DB_FILE),{recursive:true});if(fs.existsSync(DB_FILE)){state=JSON.parse(fs.readFileSync(DB_FILE,'utf8'));normalize();return}const password=process.env.APP_ADMIN_PASSWORD||`SM-${crypto.randomBytes(9).toString('base64url')}`;if(!process.env.APP_ADMIN_PASSWORD)console.warn(`[SETUP] Password awal satu kali: ${password}`);state={meta:{version:3,appKey:process.env.APP_KEY||crypto.randomBytes(48).toString('base64url'),next:{users:2,content:121,leads:1,promoters:1,referrals:1,templates:17,activity:1,messages:1,integrationRuns:1,webhookEvents:1,campaigns:1,campaignEvents:1,copyDrafts:1}},users:[{id:1,name:'Pemilik STIFIn Mulia',email:String(process.env.APP_ADMIN_EMAIL||'admin@stifinmulia.com').toLowerCase(),role:'owner',passwordHash:hash(password),active:true,createdAt:new Date().toISOString()}],content:seedContent(),leads:[],promoters:[],referrals:[],templates:seedTemplates(),activity:[],messages:[],integrationRuns:[],webhookEvents:[],campaigns:[],campaignEvents:[],copyDrafts:[]};save()}
-function normalize(){for(const k of ['users','content','leads','promoters','referrals','templates','activity','messages','integrationRuns','webhookEvents','campaigns','campaignEvents','copyDrafts'])state[k]??=[];state.meta??={};state.meta.version=3;state.meta.next??={};state.meta.appKey??=process.env.APP_KEY||crypto.randomBytes(48).toString('base64url');for(const k of ['users','content','leads','promoters','referrals','templates','activity','messages','integrationRuns','webhookEvents','campaigns','campaignEvents','copyDrafts'])state.meta.next[k]??=Math.max(0,...state[k].map(x=>Number(x.id)||0))+1}
-function save(){const tmp=`${DB_FILE}.${process.pid}.tmp`;fs.writeFileSync(tmp,JSON.stringify(state,null,2));fs.renameSync(tmp,DB_FILE)}
+function initDb(){
+  fs.mkdirSync(DATA_DIR,{recursive:true});fs.mkdirSync(BACKUP_DIR,{recursive:true});
+  const health=storageHealth();if(!health.ok)throw new Error(`Penyimpanan tidak dapat ditulis: ${health.error}`);
+  if(fs.existsSync(DB_FILE)){
+    try{state=JSON.parse(fs.readFileSync(DB_FILE,'utf8'));normalize();createBackup('startup');return}
+    catch(error){const recovered=restoreLatestBackup();if(recovered){state=recovered;normalize();save({skipBackup:true});console.warn('[STORAGE] Database dipulihkan dari cadangan terakhir.');return}throw new Error(`Database rusak dan tidak ada cadangan yang valid: ${error.message}`)}
+  }
+  const password=process.env.APP_ADMIN_PASSWORD||`SM-${crypto.randomBytes(9).toString('base64url')}`;if(!process.env.APP_ADMIN_PASSWORD)console.warn(`[SETUP] Password awal satu kali: ${password}`);
+  state={meta:{version:4,installationId:crypto.randomUUID(),createdAt:new Date().toISOString(),appKey:process.env.APP_KEY||crypto.randomBytes(48).toString('base64url'),next:{users:2,content:121,leads:1,promoters:1,referrals:1,templates:17,activity:1,messages:1,integrationRuns:1,webhookEvents:1,campaigns:1,campaignEvents:1,copyDrafts:1}},users:[{id:1,name:'Pemilik STIFIn Mulia',email:String(process.env.APP_ADMIN_EMAIL||'admin@stifinmulia.com').toLowerCase(),role:'owner',passwordHash:hash(password),active:true,createdAt:new Date().toISOString()}],content:seedContent(),leads:[],promoters:[],referrals:[],templates:seedTemplates(),activity:[],messages:[],integrationRuns:[],webhookEvents:[],campaigns:[],campaignEvents:[],copyDrafts:[]};save({skipBackup:true});createBackup('initial');
+}
+function normalize(){for(const k of ['users','content','leads','promoters','referrals','templates','activity','messages','integrationRuns','webhookEvents','campaigns','campaignEvents','copyDrafts'])state[k]??=[];state.meta??={};state.meta.version=4;state.meta.installationId??=crypto.randomUUID();state.meta.createdAt??=new Date().toISOString();state.meta.next??={};state.meta.appKey??=process.env.APP_KEY||crypto.randomBytes(48).toString('base64url');for(const k of ['users','content','leads','promoters','referrals','templates','activity','messages','integrationRuns','webhookEvents','campaigns','campaignEvents','copyDrafts'])state.meta.next[k]??=Math.max(0,...state[k].map(x=>Number(x.id)||0))+1}
+function save(options={}){if(!options.skipBackup)createBackup('auto');const tmp=`${DB_FILE}.${process.pid}.tmp`;fs.writeFileSync(tmp,JSON.stringify(state,null,2),{mode:0o600});fs.renameSync(tmp,DB_FILE)}
+function storageHealth(){try{fs.mkdirSync(DATA_DIR,{recursive:true});const probe=path.join(DATA_DIR,`.write-test-${process.pid}`);fs.writeFileSync(probe,'ok');fs.unlinkSync(probe);return {ok:true}}catch(error){return {ok:false,error:String(error.message||error)}}}
+function backupFiles(){try{return fs.readdirSync(BACKUP_DIR).filter(x=>/^database-.*\.json$/.test(x)).sort().reverse()}catch{return []}}
+function createBackup(reason='manual',force=false){
+  if(!fs.existsSync(DB_FILE))return null;
+  const now=Date.now();if(!force&&now-lastBackupAt<BACKUP_INTERVAL_MS)return null;
+  fs.mkdirSync(BACKUP_DIR,{recursive:true});
+  const stamp=new Date(now).toISOString().replace(/[:.]/g,'-');const target=path.join(BACKUP_DIR,`database-${stamp}-${reason}.json`);
+  JSON.parse(fs.readFileSync(DB_FILE,'utf8'));fs.copyFileSync(DB_FILE,target);fs.chmodSync(target,0o600);lastBackupAt=now;
+  for(const old of backupFiles().slice(BACKUP_RETENTION))fs.unlinkSync(path.join(BACKUP_DIR,old));
+  return target;
+}
+function restoreLatestBackup(){for(const file of backupFiles()){try{return JSON.parse(fs.readFileSync(path.join(BACKUP_DIR,file),'utf8'))}catch{}}return null}
+function storageSummary(){const files=backupFiles();let size=0;try{size=fs.statSync(DB_FILE).size}catch{}return {ok:storageHealth().ok,path:DB_FILE,installationId:state?.meta?.installationId||'-',databaseSize:size,backups:files.length,lastBackup:files[0]||''}}
+function backupNow(req,res,user){if(!['owner','admin'].includes(user.role))return text(res,403,'Akses ditolak');const file=createBackup('manual',true);activity(user,'membuat','cadangan database',file?path.basename(file):'tidak tersedia');return redirect(res,'/integrations?backup=success')}
+function validateBackup(candidate){
+  if(!candidate||typeof candidate!=='object'||Array.isArray(candidate))throw new Error('Berkas bukan cadangan JSON yang valid.');
+  if(!candidate.meta||typeof candidate.meta!=='object')throw new Error('Metadata cadangan tidak ditemukan.');
+  const required=['users','content','leads','promoters','referrals','templates'];
+  for(const key of required)if(!Array.isArray(candidate[key]))throw new Error(`Bagian ${key} tidak valid atau tidak tersedia.`);
+  if(!candidate.users.length||!candidate.users.some(x=>x&&x.role==='owner'&&x.active!==false&&x.passwordHash))throw new Error('Cadangan tidak memiliki akun pemilik aktif yang valid.');
+  return candidate;
+}
+function restoreUploadedBackup(req,res,user){
+  if(!['owner','admin'].includes(user.role))return text(res,403,'Akses ditolak');
+  try{
+    const raw=String(req.body?.backupData||'').trim();
+    if(!raw)throw new Error('Pilih berkas cadangan JSON terlebih dahulu.');
+    if(Buffer.byteLength(raw)>5_000_000)throw new Error('Ukuran cadangan melebihi batas 5 MB.');
+    const restored=validateBackup(JSON.parse(raw));
+    const currentSecurity={appKey:state.meta.appKey,installationId:state.meta.installationId,createdAt:state.meta.createdAt};
+    createBackup('before-restore',true);
+    state=restored;normalize();
+    state.meta.appKey=currentSecurity.appKey;
+    state.meta.installationId=currentSecurity.installationId;
+    state.meta.createdAt=currentSecurity.createdAt;
+    state.meta.restoredAt=new Date().toISOString();
+    state.meta.restoredBy=user.name;
+    save({skipBackup:true});
+    activity(user,'memulihkan','cadangan database',`${state.leads.length} lead, ${state.promoters.length} promotor`);
+    return redirect(res,'/integrations?restore=success');
+  }catch(error){
+    return redirect(res,`/integrations?restore=error&detail=${encodeURIComponent(String(error.message||error).slice(0,180))}`);
+  }
+}
 function insert(k,r){const now=new Date().toISOString();const x={id:state.meta.next[k]++,...r,createdAt:r.createdAt||now,updatedAt:now};state[k].push(x);save();return x}
 function update(k,id,r){const x=state[k].find(x=>Number(x.id)===Number(id));if(!x)return null;Object.assign(x,r,{updatedAt:new Date().toISOString()});save();return x}
 function remove(k,id){const n=state[k].findIndex(x=>Number(x.id)===Number(id));if(n<0)return false;state[k].splice(n,1);save();return true}
@@ -201,9 +261,13 @@ async function integrationsRoute(req,res,user,s){
       activity(user,'menyinkronkan','promotor STIFIn',`${created} baru, ${updated} diperbarui`);notice=`Sinkronisasi selesai: ${created} promotor baru dan ${updated} diperbarui.`;
     }catch(e){insert('integrationRuns',{provider:'STIFIn',status:'Gagal',count:0,error:String(e.message||e).slice(0,250)});error=e.message||'Sinkronisasi gagal.'}
   }else if(req.method!=='GET')return text(res,405,'Method not allowed');
-  const sc=stifinConfig(),ss=starSenderConfig(),last=state.integrationRuns.find(x=>x.provider==='STIFIn');
+  const sc=stifinConfig(),ss=starSenderConfig(),last=state.integrationRuns.find(x=>x.provider==='STIFIn'),storage=storageSummary();
   const webhookSecret=Boolean(process.env.STARSENDER_WEBHOOK_SECRET);
-  return html(res,error?502:200,layout(user,s,'Integrasi','integrations',`${notice?`<div class="flash">${esc(notice)}</div>`:''}${error?`<div class="alert bad">${esc(error)}</div>`:''}<div class="grid two"><section class="panel"><p class="eyebrow">DATA CABANG</p><h2>API STIFIn</h2><dl class="details"><div><dt>Kode cabang</dt><dd>${esc(sc.branch)}</dd></div><div><dt>Promotor tersinkron</dt><dd>${state.promoters.filter(x=>x.source==='STIFIn API').length}</dd></div><div><dt>Sinkronisasi terakhir</dt><dd>${last?`${esc(last.status)} · ${esc(last.createdAt)}`:'Belum pernah'}</dd></div></dl><p class="muted">Yang disimpan hanya data operasional. Password, PassID, tanggal lahir, dan respons mentah tidak disimpan.</p>${['owner','admin'].includes(user.role)?`<form method="post"><input type="hidden" name="csrf" value="${s.csrf}"><button class="btn primary">Sinkronkan Promotor Sekarang</button></form>`:''}</section><section class="panel"><p class="eyebrow">PENGIRIMAN PESAN</p><h2>StarSender V3</h2><dl class="details"><div><dt>Status</dt><dd><span class="badge">${ss.enabled&&ss.sendUrl&&ss.hasApiKey?'Siap':'Belum aktif'}</span></dd></div><div><dt>API key</dt><dd>${ss.hasApiKey?'Terpasang':'Belum diisi'}</dd></div><div><dt>Webhook</dt><dd>${webhookSecret?'Terlindungi':'Belum diatur'}</dd></div></dl><p class="muted">Kunci hanya dibaca dari Environment Coolify dan tidak pernah ditampilkan atau disimpan ke database.</p><a class="btn" href="/messages">Buka Pusat Pesan</a></section></div><section class="panel"><h2>Riwayat Integrasi</h2>${state.integrationRuns.length?`<div class="item-list">${state.integrationRuns.slice(0,12).map(x=>`<a><span>${dateShort(x.createdAt)}</span><div><strong>${esc(x.provider)} · ${esc(x.status)}</strong><small>${esc(x.error||`${x.count||0} data diproses`)}</small></div></a>`).join('')}</div>`:empty('Belum ada aktivitas integrasi.')}</section>`));
+  const params=new URL(req.url,`http://${req.headers.host||'localhost'}`).searchParams;
+  const backupNotice=params.get('backup')==='success'?'<div class="flash">Cadangan manual berhasil dibuat.</div>':'';
+  const restoreNotice=params.get('restore')==='success'?'<div class="flash">Cadangan berhasil dipulihkan. Salinan data sebelumnya juga sudah dibuat.</div>':params.get('restore')==='error'?`<div class="alert bad">Pemulihan gagal: ${esc(params.get('detail')||'berkas tidak valid')} Data aktif tidak diubah.</div>`:'';
+  const restoreForm=['owner','admin'].includes(user.role)?`<details class="restore-box"><summary>Pulihkan dari file cadangan</summary><p class="muted">Gunakan file JSON dari tombol Unduh Cadangan. Sistem memvalidasi isinya dan membuat salinan data aktif sebelum pemulihan.</p><form method="post" action="/restore-backup" data-restore-form data-confirm="Pemulihan akan mengganti seluruh data aktif. Lanjutkan?"><input type="hidden" name="csrf" value="${s.csrf}"><input type="file" accept="application/json,.json" data-backup-file required><textarea name="backupData" data-backup-data hidden></textarea><label class="check"><input type="checkbox" required> Saya memahami bahwa seluruh data aktif akan diganti.</label><button class="btn danger" disabled data-restore-button>Pulihkan Cadangan</button><small data-restore-status>Pilih file JSON maksimal 5 MB.</small></form></details>`:'';
+  return html(res,error?502:200,layout(user,s,'Integrasi','integrations',`${backupNotice}${restoreNotice}${notice?`<div class="flash">${esc(notice)}</div>`:''}${error?`<div class="alert bad">${esc(error)}</div>`:''}<section class="panel storage-panel"><div class="panel-head"><div><p class="eyebrow">KEAMANAN DATA</p><h2>Penyimpanan Permanen</h2></div><span class="badge">${storage.ok?'Dapat ditulis':'Bermasalah'}</span></div><div class="storage-grid"><div><span>ID instalasi</span><strong>${esc(storage.installationId.slice(0,8))}</strong></div><div><span>Ukuran database</span><strong>${formatBytes(storage.databaseSize)}</strong></div><div><span>Cadangan lokal</span><strong>${storage.backups}</strong></div><div><span>Cadangan terakhir</span><strong>${esc(storage.lastBackup?storage.lastBackup.slice(9,28).replace('T',' '):'Belum ada')}</strong></div></div><p class="muted">Data berada di <code>/app/data</code>. Pastikan Coolify memasang Persistent Storage ke lokasi tersebut. Status dapat ditulis belum menjamin volume bertahan saat redeploy jika storage Coolify belum dipasang.</p><div class="button-row"><a class="btn primary" href="/backup.json">Unduh Cadangan</a>${['owner','admin'].includes(user.role)?`<form method="post" action="/backup-now"><input type="hidden" name="csrf" value="${s.csrf}"><button class="btn">Buat Cadangan Lokal</button></form>`:''}</div>${restoreForm}</section><div class="grid two"><section class="panel"><p class="eyebrow">DATA CABANG</p><h2>API STIFIn</h2><dl class="details"><div><dt>Kode cabang</dt><dd>${esc(sc.branch)}</dd></div><div><dt>Promotor tersinkron</dt><dd>${state.promoters.filter(x=>x.source==='STIFIn API').length}</dd></div><div><dt>Sinkronisasi terakhir</dt><dd>${last?`${esc(last.status)} · ${esc(last.createdAt)}`:'Belum pernah'}</dd></div></dl><p class="muted">Yang disimpan hanya data operasional. Password, PassID, tanggal lahir, dan respons mentah tidak disimpan.</p>${['owner','admin'].includes(user.role)?`<form method="post"><input type="hidden" name="csrf" value="${s.csrf}"><button class="btn primary">Sinkronkan Promotor Sekarang</button></form>`:''}</section><section class="panel"><p class="eyebrow">PENGIRIMAN PESAN</p><h2>StarSender V3</h2><dl class="details"><div><dt>Status</dt><dd><span class="badge">${ss.enabled&&ss.sendUrl&&ss.hasApiKey?'Siap':'Belum aktif'}</span></dd></div><div><dt>API key</dt><dd>${ss.hasApiKey?'Terpasang':'Belum diisi'}</dd></div><div><dt>Webhook</dt><dd>${webhookSecret?'Terlindungi':'Belum diatur'}</dd></div></dl><p class="muted">Kunci hanya dibaca dari Environment Coolify dan tidak pernah ditampilkan atau disimpan ke database.</p><a class="btn" href="/messages">Buka Pusat Pesan</a></section></div><section class="panel"><h2>Riwayat Integrasi</h2>${state.integrationRuns.length?`<div class="item-list">${state.integrationRuns.slice(0,12).map(x=>`<a><span>${dateShort(x.createdAt)}</span><div><strong>${esc(x.provider)} · ${esc(x.status)}</strong><small>${esc(x.error||`${x.count||0} data diproses`)}</small></div></a>`).join('')}</div>`:empty('Belum ada aktivitas integrasi.')}</section>`));
 }
 
 async function voucherRoute(req,res,user,s,id){
@@ -245,7 +309,7 @@ async function starSenderWebhook(req,res,pathname){
 function profileForm(user,csrf,error='',success=''){return `<section class="panel narrow"><p class="eyebrow">AKUN</p><h2>Profil dan Keamanan</h2>${error?`<div class="alert bad">${esc(error)}</div>`:''}${success?`<div class="flash">${esc(success)}</div>`:''}<form method="post" class="form-grid"><input type="hidden" name="csrf" value="${csrf}"><label>Nama<input name="name" value="${esc(user.name)}" required></label><label>Email<input value="${esc(user.email)}" disabled></label><label>Password saat ini<input type="password" name="currentPassword"></label><label>Password baru<input type="password" name="newPassword" minlength="10"></label><label>Ulangi password baru<input type="password" name="confirmPassword" minlength="10"></label><div class="form-actions"><button class="btn primary">Simpan Profil</button></div></form></section>`}
 function messageView(t,p){return `<section class="panel narrow"><h2>${esc(t)}</h2><p>${esc(p)}</p><a class="btn" href="/">Kembali ke Dashboard</a></section>`}
 
-async function body(req){const chunks=[];let size=0;for await(const c of req){size+=c.length;if(size>1500000){const e=new Error('too large');e.statusCode=413;throw e}chunks.push(c)}return Object.fromEntries(new URLSearchParams(Buffer.concat(chunks).toString()))}
+async function body(req,limit=1_500_000){const chunks=[];let size=0;for await(const c of req){size+=c.length;if(size>limit){const e=new Error('too large');e.statusCode=413;throw e}chunks.push(c)}return Object.fromEntries(new URLSearchParams(Buffer.concat(chunks).toString()))}
 async function jsonBody(req){const chunks=[];let size=0;for await(const c of req){size+=c.length;if(size>1000000){const e=new Error('too large');e.statusCode=413;throw e}chunks.push(c)}const raw=Buffer.concat(chunks).toString();return raw?JSON.parse(raw):{}}
 function safe(a,b){const x=Buffer.from(String(a||'')),y=Buffer.from(String(b||''));return x.length===y.length&&x.length>0&&crypto.timingSafeEqual(x,y)}
 function guard(res,user,s,key,fn){return allowed(user.role,key)?fn():html(res,403,layout(user,s,'Akses ditolak','',messageView('Akses tidak tersedia','Peran akun Anda tidak memiliki izin.')))}
@@ -257,4 +321,4 @@ function csv(res,k){const rows=state[k],keys=[...new Set(rows.flatMap(Object.key
 function esc(v){return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;')}
 function cell(k,v){if(['status','role','format'].includes(k))return `<span class="badge">${esc(v||'-')}</span>`;if(k==='active')return v?'Aktif':'Tidak';const x=esc(v??'-');return x.length>100?`${x.slice(0,100)}…`:x}
 function wa(p,m){return `https://wa.me/${String(p).replace(/\D/g,'').replace(/^0/,'62')}?text=${encodeURIComponent(m)}`}
-function empty(t){return `<div class="empty">${esc(t)}</div>`}function initials(n){return String(n||'SM').split(/\s+/).slice(0,2).map(x=>x[0]).join('').toUpperCase()}function today(){return new Date().toISOString().slice(0,10)}function dateShort(v){if(!v)return'-';const d=new Date(v);return Number.isNaN(d.getTime())?esc(v):new Intl.DateTimeFormat('id-ID',{day:'2-digit',month:'short',timeZone:'Asia/Jakarta'}).format(d)}function pct(v){return `${Math.round(v*100)}%`}
+function empty(t){return `<div class="empty">${esc(t)}</div>`}function initials(n){return String(n||'SM').split(/\s+/).slice(0,2).map(x=>x[0]).join('').toUpperCase()}function today(){return new Date().toISOString().slice(0,10)}function dateShort(v){if(!v)return'-';const d=new Date(v);return Number.isNaN(d.getTime())?esc(v):new Intl.DateTimeFormat('id-ID',{day:'2-digit',month:'short',timeZone:'Asia/Jakarta'}).format(d)}function pct(v){return `${Math.round(v*100)}%`}function formatBytes(v){const n=Number(v)||0;if(n<1024)return `${n} B`;if(n<1048576)return `${(n/1024).toFixed(1)} KB`;return `${(n/1048576).toFixed(1)} MB`}
