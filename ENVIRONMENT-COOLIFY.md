@@ -1,6 +1,6 @@
 # Environment Coolify
 
-Dokumen ini berisi variabel environment untuk **STIFIn Mulia Growth OS v1.4.0**.
+Dokumen ini berisi variabel environment untuk **STIFIn Mulia Growth OS v1.5.0**.
 
 ## 1. Konfigurasi aplikasi
 
@@ -55,6 +55,8 @@ Gunakan konfigurasi aman berikut pada tahap awal:
 ```env
 STARSENDER_ENABLED=false
 STARSENDER_SEND_URL=https://api.starsender.online/api/send
+STARSENDER_GROUPS_URL=https://api.starsender.online/api/whatsapp/groups
+STARSENDER_GROUP_SEND_URL=https://api.starsender.online/api/send/grup
 STARSENDER_API_KEY=WAJIB_ISI_DEVICE_API_KEY_DARI_MENU_DEVICE
 STARSENDER_AUTH_HEADER=Authorization
 STARSENDER_AUTH_SCHEME=
@@ -81,13 +83,13 @@ Ganti bagian `NILAI_STARSENDER_WEBHOOK_SECRET` dengan nilai yang sama seperti di
 
 ## 5. Aktivasi StarSender
 
-Aktifkan integrasi setelah URL pengiriman, API key, dan device key telah terisi dan terverifikasi.
+Aktifkan integrasi setelah URL pengiriman dan Device API Key telah terisi serta terverifikasi.
 
 ```env
 STARSENDER_ENABLED=true
 ```
 
-Lakukan **Redeploy** setelah mengubah environment. Pengiriman otomatis hanya berlaku untuk lead yang memiliki status **Izin menerima pesan WhatsApp = Ya**. Jika integrasi belum aktif, operator tetap dapat memakai tombol **Buka WhatsApp**.
+Lakukan **Redeploy** setelah mengubah environment. Setelah masuk ke menu **Communication Center**, tekan **Sinkronkan Grup** untuk memuat grup perangkat WhatsApp. Pesan pribadi baru dan pesan grup baru mulai tersimpan setelah webhook Premium atau Group diarahkan ke aplikasi. Riwayat WhatsApp lama tidak dapat diambil otomatis. Pengiriman otomatis pribadi hanya berlaku untuk lead yang memiliki status **Izin menerima pesan WhatsApp = Ya**. Jika integrasi belum aktif, operator tetap dapat memakai tombol **Buka WhatsApp**.
 
 ## Pengaturan port Coolify
 

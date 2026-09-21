@@ -25,6 +25,8 @@ INTEGRATION_TIMEOUT_MS=15000
 # Aktifkan setelah URL kirim dan API key resmi diisi dari dashboard StarSender.
 STARSENDER_ENABLED=false
 STARSENDER_SEND_URL=https://api.starsender.online/api/send
+STARSENDER_GROUPS_URL=https://api.starsender.online/api/whatsapp/groups
+STARSENDER_GROUP_SEND_URL=https://api.starsender.online/api/send/grup
 STARSENDER_API_KEY=WAJIB_ISI_DEVICE_API_KEY_DARI_MENU_DEVICE
 STARSENDER_AUTH_HEADER=Authorization
 STARSENDER_AUTH_SCHEME=

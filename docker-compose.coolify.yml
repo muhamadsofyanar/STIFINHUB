@@ -26,6 +26,8 @@ services:
       INTEGRATION_TIMEOUT_MS: "${INTEGRATION_TIMEOUT_MS:-15000}"
       STARSENDER_ENABLED: "${STARSENDER_ENABLED:-false}"
       STARSENDER_SEND_URL: "${STARSENDER_SEND_URL:-https://api.starsender.online/api/send}"
+      STARSENDER_GROUPS_URL: "${STARSENDER_GROUPS_URL:-https://api.starsender.online/api/whatsapp/groups}"
+      STARSENDER_GROUP_SEND_URL: "${STARSENDER_GROUP_SEND_URL:-https://api.starsender.online/api/send/grup}"
       STARSENDER_API_KEY: "${STARSENDER_API_KEY:-}"
       STARSENDER_AUTH_HEADER: "${STARSENDER_AUTH_HEADER:-Authorization}"
       STARSENDER_AUTH_SCHEME: "${STARSENDER_AUTH_SCHEME:-}"

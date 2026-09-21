@@ -21,7 +21,8 @@ Aplikasi internal untuk mengelola pemasaran dan operasional STIFIn Mulia. Aplika
 - Antrean tindak lanjut lead dan review promotor
 - Log pengiriman, webhook tersanitasi, dan laporan integrasi
 - Growth CRM berbentuk Kanban dengan lead scoring dan rekomendasi tindakan
-- Inbox WhatsApp dua arah dari webhook StarSender
+- Communication Center untuk percakapan pribadi dan grup dari webhook StarSender
+- Sinkronisasi daftar grup, balasan grup, status belum dibaca, label CRM, dan catatan internal
 - Kampanye dengan tautan pelacakan, sumber lead, dan konversi booking
 - Formulir konsultasi publik dengan persetujuan WhatsApp dan perlindungan spam
 - Copywriting Lab yang mengubah satu materi menjadi enam format konten
@@ -95,7 +96,7 @@ Materi awal mengacu pada tema WSL 1, WSL 2, parenting, learning, teaching, profe
 
 ## Integrasi StarSender
 
-Masukkan API key hanya melalui Environment Variables Coolify. Jangan menaruh kunci di repository. Gunakan **Device API Key** dari menu Device StarSender sebagai `STARSENDER_API_KEY`. Endpoint resmi pengiriman adalah `https://api.starsender.online/api/send`, sedangkan `STARSENDER_AUTH_SCHEME` harus kosong karena kunci dikirim langsung pada header `Authorization`. Sampai `STARSENDER_ENABLED=true`, URL kirim, dan API key lengkap, Pusat Pesan tetap dapat membuka WhatsApp manual. Pengiriman otomatis hanya diizinkan untuk lead dengan kolom **Izin menerima pesan WhatsApp = Ya**.
+Masukkan API key hanya melalui Environment Variables Coolify. Jangan menaruh kunci di repository. Gunakan **Device API Key** dari menu Device StarSender sebagai `STARSENDER_API_KEY`. Endpoint resmi pengiriman pribadi adalah `https://api.starsender.online/api/send`, daftar grup `https://api.starsender.online/api/whatsapp/groups`, dan pengiriman grup `https://api.starsender.online/api/send/grup`. `STARSENDER_AUTH_SCHEME` harus kosong karena kunci dikirim langsung pada header `Authorization`. Sampai integrasi lengkap, Communication Center tetap dapat membuka WhatsApp manual untuk percakapan pribadi. Pengiriman otomatis pribadi hanya diizinkan untuk lead dengan kolom **Izin menerima pesan WhatsApp = Ya**.
 
 Webhook dapat diarahkan ke:
 
@@ -103,7 +104,7 @@ Webhook dapat diarahkan ke:
 https://app.stifinmulia.com/webhooks/starsender/NILAI_STARSENDER_WEBHOOK_SECRET
 ```
 
-Gunakan URL kirim dan format autentikasi resmi yang tampil pada akun StarSender V3 Premium Anda; aplikasi tidak menebak endpoint agar kunci dan pesan tidak terkirim ke alamat yang salah.
+Aktifkan webhook Premium atau Group agar pesan baru masuk ke Communication Center. Aplikasi menyimpan percakapan mulai sejak webhook aktif, bukan mengambil seluruh riwayat lama dari WhatsApp. Daftar grup dapat dimuat lewat tombol **Sinkronkan Grup**.
 
 ## Growth CRM dan kampanye
 

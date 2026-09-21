@@ -37,7 +37,9 @@
 - [ ] Growth CRM dapat dibuka
 - [ ] Form `/forms/consultation` berhasil membuat lead
 - [ ] Tautan kampanye mencatat klik
-- [ ] Pesan masuk webhook tampil di Inbox WhatsApp
+- [ ] Pesan pribadi masuk tampil di Communication Center
+- [ ] Tombol Sinkronkan Grup memuat daftar grup WhatsApp
+- [ ] Pesan grup masuk dan balasan grup tampil di percakapan yang sama
 - [ ] Copywriting Lab menghasilkan enam format
 - [ ] Akun tim dibuat sesuai peran
 - [ ] Lead uji sudah dihapus

@@ -27,6 +27,7 @@ function firstArray(value){
 }
 
 function cleanPhone(value){return String(value||'').replace(/[^\d+]/g,'')}
+function asBoolean(value){return value===true||value===1||String(value||'').toLowerCase()==='true'||String(value||'')==='1'}
 
 export function stifinConfig(){return {base:trimSlash(process.env.STIFIN_API_BASE||'https://apro.stifin.id/api'),branch:String(process.env.STIFIN_BRANCH_CODE||'JML-CAB-62').trim()}}
 
@@ -78,13 +79,53 @@ export async function sendStarSender({phone,message}){
   return {externalId:String(result?.id??result?.data?.id??result?.message_id??''),result};
 }
 
+function starSenderHeaders(){
+  const header=String(process.env.STARSENDER_AUTH_HEADER||'Authorization');
+  const scheme=String(process.env.STARSENDER_AUTH_SCHEME??'').trim();
+  if(!process.env.STARSENDER_API_KEY)throw new Error('Device API Key StarSender belum diisi.');
+  return {'content-type':'application/json',[header]:`${scheme?`${scheme} `:''}${process.env.STARSENDER_API_KEY}`};
+}
+
+export async function fetchWhatsAppGroups(){
+  const config=starSenderConfig();
+  if(!config.enabled)throw new Error('StarSender belum diaktifkan.');
+  const url=String(process.env.STARSENDER_GROUPS_URL||'https://api.starsender.online/api/whatsapp/groups').trim();
+  const result=await requestJson(url,{headers:starSenderHeaders()});
+  let rows=firstArray(result);
+  if(!rows.length&&result?.data&&typeof result.data==='object'&&!Array.isArray(result.data))rows=Object.entries(result.data).map(([id,value])=>typeof value==='object'?{id,...value}:{id,name:value});
+  return rows.map((row,index)=>({
+    groupId:String(row.id??row.group_id??row.groupId??row.jid??row.value??row.remoteJid??'').trim(),
+    name:String(row.name??row.subject??row.group_name??row.groupName??row.label??`Grup ${index+1}`).trim(),
+    participants:Number(row.participants_count??row.participantCount??row.size??0)||0
+  })).filter(row=>row.groupId||row.name);
+}
+
+export async function sendStarSenderGroup({group,message}){
+  const config=starSenderConfig();
+  if(!config.enabled)throw new Error('StarSender belum diaktifkan.');
+  const url=String(process.env.STARSENDER_GROUP_SEND_URL||'https://api.starsender.online/api/send/grup').trim();
+  const payload={messageType:'text',to:String(group||'').trim(),body:String(message||'').trim()};
+  const result=await requestJson(url,{method:'POST',headers:starSenderHeaders(),body:JSON.stringify(payload)});
+  return {externalId:String(result?.id??result?.data?.id??result?.message_id??''),result};
+}
+
 export function sanitizeStarSenderWebhook(payload){
   const source=payload&&typeof payload==='object'?payload:{};
+  const rawAddress=String(source.from??source.phone??source.to??source.number??source.data?.phone??'').trim();
+  const isGroup=asBoolean(source.is_group??source.data?.is_group)||String(source.chat_type??source.data?.chat_type??'').toLowerCase()==='group';
   return {
     externalId:String(source.id??source.message_id??source.data?.id??'').slice(0,160),
-    phone:cleanPhone(source.from??source.phone??source.to??source.number??source.data?.phone??'').slice(0,30),
+    phone:cleanPhone(rawAddress).slice(0,80),
+    address:rawAddress.slice(0,160),
     message:String(source.message??source.body??source.text??source.data?.message??'').slice(0,4000),
     device:String(source.device??source.data?.device??'').slice(0,160),
+    chatType:String(source.chat_type??source.data?.chat_type??(isGroup?'group':'personal')).toLowerCase().slice(0,20),
+    isGroup,
+    isMe:asBoolean(source.is_me??source.data?.is_me),
+    isMentioned:asBoolean(source.is_mentioned??source.data?.is_mentioned),
+    pushName:String(source.push_name??source.data?.push_name??'').slice(0,160),
+    file:String(source.file??source.data?.file??'').slice(0,1000),
+    quotedMessage:String(source.quoted_message??source.data?.quoted_message??'').slice(0,2000),
     event:String(source.event??source.status??source.type??source.data?.status??'unknown').slice(0,80),
     sourceTimestamp:String(source.timestamp??source.data?.timestamp??'').slice(0,80),
     receivedAt:new Date().toISOString()

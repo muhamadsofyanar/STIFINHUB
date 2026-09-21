@@ -90,7 +90,8 @@ SSL tidak perlu dikonfigurasi di dalam Nginx. Coolify menangani sertifikat HTTPS
 - Hapus data uji jika sudah selesai.
 - Buka `/forms/consultation` dan kirim satu lead uji.
 - Buat satu kampanye lalu uji tautan `/go/KODE-KAMPANYE`.
-- Pastikan webhook StarSender menampilkan pesan masuk pada Inbox WhatsApp.
+- Pastikan webhook StarSender menampilkan pesan pribadi dan grup pada Communication Center.
+- Tekan **Sinkronkan Grup** dan pastikan daftar grup perangkat muncul.
 
 ## 7. Pembaruan berikutnya
 
